@@ -1,0 +1,66 @@
+# Config real-robot para política AGACHARSE V10 (HumanoidVerse/Genesis, 29-DOF)
+# Validada en MuJoCo: 0 caídas en 30s, squat 88-94%, 0 clips
+#
+# num_obs=94 en orden ALFABÉTICO (sorted(obs_keys)):
+#   base_ang_vel[0:3] | dof_pos[3:32] | dof_vel[32:61] | phase[61] | gravity[62:65] | q_target[65:94]
+#
+# control_mode: hybrid_legs_waist — DOF 0-14 por política, DOF 15-28 fijos en default
+
+policy_path: "{REPO_ROOT}/politicas/motion_agacharse_v10_jit.pt"
+
+control_dt: 0.02        # 50 Hz (Genesis: sim_dt=0.002, decimation=10)
+lowcmd_topic:   "rt/lowcmd"
+lowstate_topic: "rt/lowstate"
+
+# DOF order: L_leg(0-5) R_leg(6-11) waist(12-14) L_arm(15-21) R_arm(22-28)
+# kp/kd: Unitree oficial para piernas (validados en MuJoCo), Genesis para cintura/brazos
+kps: [ 40.2,  40.2,  40.2,  99.1, 28.5, 28.5,
+       40.2,  40.2,  40.2,  99.1, 28.5, 28.5,
+      400.0, 400.0, 400.0,
+       90.0,  60.0,  20.0,  60.0,  4.0,  4.0,  4.0,
+       90.0,  60.0,  20.0,  60.0,  4.0,  4.0,  4.0]
+
+kds: [2.6, 2.6, 2.6, 6.3, 1.8, 1.8,
+      2.6, 2.6, 2.6, 6.3, 1.8, 1.8,
+      5.0, 5.0, 5.0,
+      2.0, 1.0, 0.4, 1.0, 0.2, 0.2, 0.2,
+      2.0, 1.0, 0.4, 1.0, 0.2, 0.2, 0.2]
+
+default_angles: [-0.1, 0.0, 0.0, 0.3, -0.2, 0.0,
+                 -0.1, 0.0, 0.0, 0.3, -0.2, 0.0,
+                  0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+torque_limits: [88.0, 88.0, 88.0, 139.0, 50.0, 50.0,
+                88.0, 88.0, 88.0, 139.0, 50.0, 50.0,
+                88.0, 50.0, 50.0,
+                25.0, 25.0, 25.0, 25.0, 25.0, 5.0, 5.0,
+                25.0, 25.0, 25.0, 25.0, 25.0, 5.0, 5.0]
+
+action_scale: 0.25
+action_clip:  3.0      # igual que training (clip_actions=3.0)
+num_actions:  29
+num_obs:      94
+
+dof_vel_scale: 0.05
+ang_vel_scale: 0.25
+
+period_s: 4.0          # 2s bajar + 2s subir
+control_mode: hybrid_legs_waist
+
+pose_A:                # postura de pie (= default_dof_pos)
+  left_hip_pitch_joint:    -0.1
+  right_hip_pitch_joint:   -0.1
+  left_knee_joint:          0.3
+  right_knee_joint:         0.3
+  left_ankle_pitch_joint:  -0.2
+  right_ankle_pitch_joint: -0.2
+
+pose_B:                # squat target
+  left_hip_pitch_joint:    -0.5
+  right_hip_pitch_joint:   -0.5
+  left_knee_joint:          0.8
+  right_knee_joint:         0.8
+  left_ankle_pitch_joint:  -0.1
+  right_ankle_pitch_joint: -0.1

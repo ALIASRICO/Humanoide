@@ -1,0 +1,71 @@
+# Config para política de movimiento MOVER MUÑECAS en MuJoCo 29-DOF
+# Entrenada con action_scale=0.25, clamp_actions=1.0, IsaacGym kp/kd
+# num_obs=62: orden ALFABÉTICO [dof_pos(29) + phase_signal(1) + projected_gravity(3) + q_target(29)]
+#
+# CRÍTICO: pose_B sólo tiene wrists — shoulder/elbow quedan en default=0 (igual que training)
+#   → q_target oscila: shoulder(-0.6→0), elbow(0.5→0), wrist_r(1→-1), wrist_p(0.4→-0.4)
+#
+# control_mode: hybrid_arms — legs/waist fijos; policy controla DOF 15-28 (brazos)
+# kp_leg=500: necesario en MuJoCo para resistir la oscilación dinámica de brazos (IsaacGym
+#   tenía contactos más rígidos que permiten balance con kp_ankle=20 de training).
+policy_path: "{REPO_ROOT}/politicas/motion_munecas_DR_jit.pt"
+xml_path: "{REPO_ROOT}/escenas/scene_29dof.xml"
+
+simulation_duration: 30.0
+simulation_dt: 0.002    # 2 ms — igual que otros sims
+control_decimation: 10  # 50 Hz (IsaacGym: fps=200 Hz, dec=4 = 50 Hz)
+
+# kp/kd: piernas kp=500 (calibrado para MuJoCo), brazos = Genesis training defaults
+# DOF order: L_leg(6) R_leg(6) waist(3) L_arm(7) R_arm(7)
+kps: [500.0, 500.0, 500.0, 500.0, 500.0, 500.0,
+      500.0, 500.0, 500.0, 500.0, 500.0, 500.0,
+      500.0, 500.0, 500.0,
+       90.0,  60.0,  20.0,  60.0,   4.0,   4.0,   4.0,
+       90.0,  60.0,  20.0,  60.0,   4.0,   4.0,   4.0]
+
+kds: [10.0, 10.0, 10.0, 10.0, 10.0, 10.0,
+      10.0, 10.0, 10.0, 10.0, 10.0, 10.0,
+      10.0, 10.0, 10.0,
+       2.0,  1.0,  0.4,  1.0,  0.2,  0.2,  0.2,
+       2.0,  1.0,  0.4,  1.0,  0.2,  0.2,  0.2]
+
+default_angles: [-0.1, 0.0, 0.0, 0.3, -0.2, 0.0,
+                 -0.1, 0.0, 0.0, 0.3, -0.2, 0.0,
+                  0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+action_scale: 0.25   # igual que training (action_scale: 0.25)
+action_clip: 1.0     # igual que training (clamp_actions: 1.0)
+
+torque_limits: [88.0, 88.0, 88.0, 139.0, 50.0, 50.0,
+                88.0, 88.0, 88.0, 139.0, 50.0, 50.0,
+                88.0, 50.0, 50.0,
+                25.0, 25.0, 25.0, 25.0,  5.0,  5.0,  5.0,
+                25.0, 25.0, 25.0, 25.0,  5.0,  5.0,  5.0]
+
+num_actions: 29
+num_obs: 62
+# obs layout (alfabético): dof_pos[0:29] + phase_signal[29] + projected_gravity[30:33] + q_target[33:62]
+
+period_s: 1.2
+periodic: true
+control_mode: hybrid_arms  # DOF 15-28 por policy, DOF 0-14 fijos en default
+init_at_default: true      # iniciar en default_q (igual que training init_state)
+
+pose_A:
+  left_shoulder_pitch_joint: -0.6
+  right_shoulder_pitch_joint: -0.6
+  left_elbow_joint: 0.5
+  right_elbow_joint: 0.5
+  left_wrist_roll_joint: 1.0
+  right_wrist_roll_joint: -1.0
+  left_wrist_pitch_joint: 0.4
+  right_wrist_pitch_joint: 0.4
+
+pose_B:
+  # SÓLO wrists — shoulder/elbow quedan en default=0 (igual que training)
+  left_wrist_roll_joint: -1.0
+  right_wrist_roll_joint: 1.0
+  left_wrist_pitch_joint: -0.4
+  right_wrist_pitch_joint: -0.4

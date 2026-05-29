@@ -1,0 +1,36 @@
+# @package _global_
+# Rewards para agacharse V5 — movimiento periódico de pie→squat→pie
+# Con action_scale=0.5 el policy puede alcanzar el squat directamente
+
+rewards:
+  set_reward: MotionPolicy
+  set_reward_date: 20260521
+  only_positive_rewards: False
+  reward_scales:
+      pose_tracking: 2.0        # aumentado — señal principal para seguir trayectoria
+      leg_stability: 0.0        # eliminado — conflicta con squat
+      action_smoothness: -0.01  # más penalización — evitar acciones caóticas
+      alive_bonus: 0.1          # reducido — no dominar sobre pose_tracking
+      fall_penalty: -10.0
+
+  reward_tracking_sigma:
+    lin_vel: 0.25
+    ang_vel: 0.25
+
+  reward_limit:
+    soft_dof_pos_limit: 0.9
+    soft_dof_vel_limit: 0.9
+    soft_torque_limit: 0.9
+
+  # Sin desired_base_height — la altura varía naturalmente en el ciclo pie→squat
+
+  reward_penalty_curriculum: False
+  reward_initial_penalty_scale: 0.1
+  reward_min_penalty_scale: 0.0
+  reward_max_penalty_scale: 1.0
+  reward_penalty_level_down_threshold: 400
+  reward_penalty_level_up_threshold: 700
+  reward_penalty_degree: 0.00005
+  num_compute_average_epl: 10000
+
+  reward_penalty_reward_names: []

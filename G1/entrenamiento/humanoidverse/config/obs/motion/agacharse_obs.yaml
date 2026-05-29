@@ -1,0 +1,62 @@
+# @package _global_
+# Observaciones para agacharse — 94 dims
+# Incluye velocidades articulares y angulares para estabilidad dinámica
+# dof_pos(29) + q_target(29) + dof_vel(29) + base_ang_vel(3) + phase_signal(1) + gravity(3) = 94
+
+obs:
+  obs_dict:
+    actor_obs: [
+      dof_pos,
+      q_target,
+      dof_vel,
+      base_ang_vel,
+      phase_signal,
+      projected_gravity,
+    ]
+
+    critic_obs: [
+      dof_pos,
+      q_target,
+      dof_vel,
+      base_ang_vel,
+      phase_signal,
+      projected_gravity,
+    ]
+
+  obs_auxiliary:
+    history_long: {
+      dof_pos: 20,
+      q_target: 20,
+      dof_vel: 20,
+    }
+    history_short: {
+      dof_pos: 3,
+      q_target: 3,
+      dof_vel: 3,
+    }
+
+  obs_scales: {
+    dof_pos: 1.0,
+    q_target: 1.0,
+    dof_vel: 0.05,
+    base_ang_vel: 0.25,
+    phase_signal: 1.0,
+    projected_gravity: 1.0,
+  }
+
+  noise_scales: {
+    dof_pos: 0.0,
+    q_target: 0.0,
+    dof_vel: 0.0,
+    base_ang_vel: 0.0,
+    phase_signal: 0.0,
+    projected_gravity: 0.0,
+  }
+
+  obs_dims:
+    - dof_pos: ${robot.dof_obs_size}
+    - q_target: ${robot.dof_obs_size}
+    - dof_vel: ${robot.dof_obs_size}
+    - base_ang_vel: 3
+    - phase_signal: 1
+    - projected_gravity: 3

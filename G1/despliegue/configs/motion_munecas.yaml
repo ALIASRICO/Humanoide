@@ -1,0 +1,71 @@
+# Config real-robot para política MUÑECAS (HumanoidVerse/IsaacGym, 29-DOF)
+# Validada en MuJoCo: 0 caídas en 30s, muñecas oscilando ±1 rad, 30s estable
+#
+# num_obs=62 en orden ALFABÉTICO (sorted(obs_keys)):
+#   dof_pos[0:29] | phase[29] | gravity[30:33] | q_target[33:62]
+# (sin dof_vel ni base_ang_vel — no estaban en el training)
+#
+# control_mode: hybrid_arms — DOF 15-28 (brazos) por política, DOF 0-14 fijos en default
+#
+# CRÍTICO pose_B: sólo wrists — shoulder/elbow quedan en default=0 (igual que training)
+#   q_target oscila: shoulder(-0.6→0), elbow(0.5→0), wrist_roll(1→-1), wrist_pitch(0.4→-0.4)
+#
+# kp piernas: valores training IsaacGym (100/200/20), NO el kp=500 que era calibración MuJoCo
+
+policy_path: "{REPO_ROOT}/politicas/motion_munecas_DR_jit.pt"
+
+control_dt: 0.02        # 50 Hz (IsaacGym: fps=200 Hz, dec=4 = 50 Hz)
+lowcmd_topic:   "rt/lowcmd"
+lowstate_topic: "rt/lowstate"
+
+# DOF order: L_leg(0-5) R_leg(6-11) waist(12-14) L_arm(15-21) R_arm(22-28)
+# kp piernas/cintura: training IsaacGym (hip=100, knee=200, ankle=20, waist=300)
+# kp brazos: training IsaacGym (shoulder=90/60/20, elbow=60, wrist=4)
+kps: [100.0, 100.0, 100.0, 200.0, 20.0, 20.0,
+      100.0, 100.0, 100.0, 200.0, 20.0, 20.0,
+      300.0, 300.0, 300.0,
+       90.0,  60.0,  20.0,  60.0,  4.0,  4.0,  4.0,
+       90.0,  60.0,  20.0,  60.0,  4.0,  4.0,  4.0]
+
+kds: [2.5, 2.5, 2.5, 5.0, 0.2, 0.1,
+      2.5, 2.5, 2.5, 5.0, 0.2, 0.1,
+      3.0, 3.0, 3.0,
+      2.0, 1.0, 0.4, 1.0, 0.2, 0.2, 0.2,
+      2.0, 1.0, 0.4, 1.0, 0.2, 0.2, 0.2]
+
+default_angles: [-0.1, 0.0, 0.0, 0.3, -0.2, 0.0,
+                 -0.1, 0.0, 0.0, 0.3, -0.2, 0.0,
+                  0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+torque_limits: [88.0, 88.0, 88.0, 139.0, 50.0, 50.0,
+                88.0, 88.0, 88.0, 139.0, 50.0, 50.0,
+                88.0, 50.0, 50.0,
+                25.0, 25.0, 25.0, 25.0,  5.0,  5.0,  5.0,
+                25.0, 25.0, 25.0, 25.0,  5.0,  5.0,  5.0]
+
+action_scale: 0.25
+action_clip:  1.0      # igual que training (clamp_actions=1.0)
+num_actions:  29
+num_obs:      62
+
+period_s: 1.2
+control_mode: hybrid_arms
+
+pose_A:
+  left_shoulder_pitch_joint:   -0.6
+  right_shoulder_pitch_joint:  -0.6
+  left_elbow_joint:             0.5
+  right_elbow_joint:            0.5
+  left_wrist_roll_joint:        1.0
+  right_wrist_roll_joint:      -1.0
+  left_wrist_pitch_joint:       0.4
+  right_wrist_pitch_joint:      0.4
+
+pose_B:
+  # SÓLO wrists — shoulder/elbow quedan en default=0 (igual que training)
+  left_wrist_roll_joint:   -1.0
+  right_wrist_roll_joint:   1.0
+  left_wrist_pitch_joint:  -0.4
+  right_wrist_pitch_joint: -0.4

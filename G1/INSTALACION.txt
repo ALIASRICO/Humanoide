@@ -1,0 +1,356 @@
+================================================================================
+  INSTALACION DESDE CERO — Unitree G1 / Universidad de Colombia
+  Repo: /home/udc/Unitree_G1
+================================================================================
+
+  Este archivo cubre la instalacion completa de todos los componentes:
+    - Entorno g1_udc  →  simulacion MuJoCo + despliegue robot fisico
+    - Entorno hgen    →  entrenamiento RL (HumanoidVerse + Genesis)
+    - ROS2 Jazzy      →  LiDAR, topics, SLAM, RViz
+    - Paquetes extra  →  teleoperacion, imitation learning, SLAM
+
+  HARDWARE de referencia:
+    GPU:    NVIDIA RTX 5090 (arquitectura Blackwell, compute cap 12.0)
+    Driver: 580.142
+    CUDA:   13.0
+    OS:     Ubuntu 24.04 LTS
+
+  NOTA para otras GPUs:
+    RTX 5060 / 5070 / 5080 → CUDA 13.0, mismos comandos
+    RTX 30xx / 40xx         → CUDA 12.1: cambia cu130 → cu121
+
+
+════════════════════════════════════════════════════════════════════════════════
+ PASO 0 — REQUISITOS DEL SISTEMA (apt)
+════════════════════════════════════════════════════════════════════════════════
+
+  0.1 Driver NVIDIA
+  ─────────────────
+    El driver debe ser >= 570 para RTX 5000 (CUDA 13.0).
+      nvidia-smi                     # verificar version instalada
+      sudo ubuntu-drivers autoinstall
+      sudo reboot
+
+  0.2 Dependencias de sistema base
+  ──────────────────────────────────
+    sudo apt update && sudo apt install -y \
+      build-essential git wget curl cmake \
+      libgl1-mesa-glx libglib2.0-0 \
+      libxrandr2 libxinerama1 libxcursor1 libxi6 \
+      python3-dev libyaml-cpp-dev \
+      libssl-dev net-tools
+
+  0.3 ROS2 Jazzy
+  ──────────────
+    Si ROS2 Jazzy no esta instalado:
+      sudo apt install software-properties-common
+      sudo add-apt-repository universe
+      sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+        -o /usr/share/keyrings/ros-archive-keyring.gpg
+      echo "deb [arch=$(dpkg --print-architecture) \
+        signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
+        http://packages.ros.org/ros2/ubuntu noble main" | \
+        sudo tee /etc/apt/sources.list.d/ros2.list
+      sudo apt update
+      sudo apt install -y ros-jazzy-desktop
+
+  0.4 ROS2 Jazzy — paquetes adicionales para G1
+  ───────────────────────────────────────────────
+    # CycloneDDS RMW (necesario para comunicarse con el G1)
+    sudo apt install -y \
+      ros-jazzy-rmw-cyclonedds-cpp \
+      ros-jazzy-rosidl-generator-dds-idl
+
+    # SLAM (kiss-icp — sin compilacion, funciona con /utlidar/cloud)
+    sudo apt install -y ros-jazzy-kiss-icp
+
+    # Mensajes Unitree (compilar una vez):
+    cd /home/udc/Unitree_G1
+    bash ros2_ws/build_msgs.sh
+
+  0.5 Miniconda
+  ─────────────
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    bash Miniconda3-latest-Linux-x86_64.sh   # decir "yes" a init
+    source ~/.bashrc
+    conda --version                          # verificar
+
+  0.6 Clonar el repositorio
+  ─────────────────────────
+    git clone <URL_DEL_REPO> /home/udc/Unitree_G1
+    cd /home/udc/Unitree_G1
+
+
+════════════════════════════════════════════════════════════════════════════════
+ PASO 1 — ENTORNO g1_udc  (MuJoCo + despliegue + SDK + teleop + imitacion)
+════════════════════════════════════════════════════════════════════════════════
+
+  Este entorno cubre todo excepto entrenamiento RL:
+    - MuJoCo 3.2.3          simulador de fisica
+    - PyTorch 2.9.0          inferencia de la politica
+    - unitree-sdk2py         comunicacion con el robot (DDS)
+    - ultralytics            deteccion de objetos YOLO
+    - pinocchio + casadi     cinematica inversa de brazos (IK)
+    - lerobot                pipeline de imitation learning
+    - pygame                 SDK bridge (mando virtual en sim)
+
+  OPCION A — Restaurar desde el backup (recomendado)
+  ───────────────────────────────────────────────────
+    conda env create -f /home/udc/Humanoide/G1/envs/g1_udc_backup.yml
+    conda activate /home/udc/Humanoide/G1/envs/g1_udc
+
+  OPCION B — Instalar manualmente
+  ────────────────────────────────
+    conda create -p /home/udc/Humanoide/G1/envs/g1_udc python=3.11 -y
+    conda activate /home/udc/Humanoide/G1/envs/g1_udc
+
+    # PyTorch con CUDA 13.0 (RTX 5090 / Blackwell / Ada)
+    pip install torch==2.9.0 torchvision==0.24.0 \
+      --index-url https://download.pytorch.org/whl/cu130
+
+    # Para RTX 30xx / 40xx (CUDA 12.1):
+    # pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+
+    # MuJoCo y visor
+    pip install mujoco==3.2.3 mujoco-python-viewer==0.1.4 glfw==2.9.0 pygame
+
+    # SDK Unitree + DDS
+    pip install unitree-sdk2py==1.0.1 cyclonedds==0.10.2
+
+    # Deteccion de objetos YOLO
+    pip install ultralytics==8.4.41
+
+    # Cinematica inversa (teleoperacion de brazos)
+    conda install -c conda-forge pinocchio -y
+    pip install casadi meshcat rerun-sdk==0.20.1
+
+    # Imitation learning (LeRobot pipeline)
+    pip install lerobot pyqt5
+
+    # Utilidades
+    pip install numpy pyyaml scipy
+
+  Verificar instalacion:
+    conda activate /home/udc/Humanoide/G1/envs/g1_udc
+    python -c "import mujoco; print('mujoco', mujoco.__version__)"
+    python -c "import torch; print('torch', torch.__version__, torch.cuda.is_available())"
+    python -c "from unitree_sdk2py.core.channel import ChannelFactory; print('SDK OK')"
+    python -c "import pinocchio; import casadi; print('IK OK')"
+
+
+════════════════════════════════════════════════════════════════════════════════
+ PASO 2 — ENTORNO hgen  (entrenamiento HumanoidVerse + Genesis)
+════════════════════════════════════════════════════════════════════════════════
+
+  Este entorno solo se usa para ENTRENAR politicas nuevas.
+  No se necesita para simulacion ni despliegue.
+
+    - Python 3.10        requerido por Genesis 0.2.1
+    - PyTorch 2.11.0     con CUDA 13.0
+    - genesis-world      simulador GPU de fisica (LeCAR-Lab)
+    - humanoidverse      framework de entrenamiento RL
+
+  OPCION A — Restaurar desde el backup (recomendado)
+  ───────────────────────────────────────────────────
+    conda env create -f /home/udc/Humanoide/G1/envs/hgen_backup.yml
+    conda activate hgen
+    pip install -e /home/udc/Humanoide/G1/entrenamiento/
+
+  OPCION B — Instalar manualmente
+  ────────────────────────────────
+    conda create -n hgen python=3.10 -y
+    conda activate hgen
+
+    # PyTorch con CUDA 13.0
+    pip install torch==2.11.0 torchvision \
+      --index-url https://download.pytorch.org/whl/cu130
+
+    # Genesis (simulador GPU)
+    pip install genesis-world==0.2.1
+
+    # HumanoidVerse (framework de entrenamiento)
+    pip install -e /home/udc/Humanoide/G1/entrenamiento/
+    # Instala: hydra-core, numpy, tensorboard, wandb, scipy, etc.
+
+    # Verificar
+    python -c "import genesis; import humanoidverse; print('hgen OK')"
+
+
+════════════════════════════════════════════════════════════════════════════════
+ PASO 3 — ENTORNO isaaclab  (Isaac Sim 5.1.0 + Isaac Lab 2.3.2)
+════════════════════════════════════════════════════════════════════════════════
+
+  Este entorno cubre:
+    - Simulacion de manipulacion (pick/place, stacking) con Isaac Sim
+    - Entrenamiento RL de locomocion con Isaac Lab (velocidad + imitacion BVH)
+
+  El entorno ya esta instalado en /home/udc/IsaacLab/.
+  Si necesitas reinstalar desde cero:
+
+  3.1 Instalar Isaac Sim 5.1.0 + Isaac Lab
+  ──────────────────────────────────────────
+    # Requiere GPU RTX 40xx / RTX 50xx (compute cap >= 8.9)
+    # Seguir guia oficial: https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/
+
+    # Una vez instalado, instalar paquetes extra del proyecto:
+    conda activate isaaclab
+    pip install "cryptography==44.0.0"  # fijar version compatible con isaacsim
+    pip install isaacsim-robot-motion isaacsim-robot-policy
+    pip install -e entrenamiento/isaac_rl_lab/source/unitree_rl_lab/
+
+  3.2 Verificar instalacion
+  ──────────────────────────
+    conda run -n isaaclab python -c "import isaacsim; print('Isaac Sim OK')"
+    conda run -n isaaclab python -c "import isaaclab; print('Isaac Lab OK')"
+    conda run -n isaaclab python codigos/isaac_sim/inspect_g1_joints.py
+
+  3.3 Rutas de modelos USD (ya configurado)
+  ──────────────────────────────────────────
+    Los USD del G1 estan en escenas/unitree_model/G1/29dof/usd/
+    unitree.py ya apunta a esa ruta — no es necesario cambiar nada.
+
+
+════════════════════════════════════════════════════════════════════════════════
+ PASO 4 — SDK Y CycloneDDS (para robot fisico)
+════════════════════════════════════════════════════════════════════════════════
+
+  4.1 Variable de entorno CycloneDDS
+  ────────────────────────────────────
+    Los binarios ya estan compilados en humanoide/cyclonedds_install/.
+    Solo hay que apuntar la variable:
+
+      echo 'export CYCLONEDDS_HOME=/home/udc/Humanoide/G1/humanoide/cyclonedds_install' \
+        >> ~/.bashrc
+      source ~/.bashrc
+      ls $CYCLONEDDS_HOME/lib/libddsc.so   # verificar
+
+  4.2 Permisos de red
+  ────────────────────
+    Para que el SDK envie paquetes sin ser root:
+      sudo setcap cap_net_raw+ep \
+        /home/udc/Humanoide/G1/envs/g1_udc/bin/python
+
+  4.3 IP estatica en Ubuntu
+  ─────────────────────────
+    Ajustes → Red → Ethernet → Editar → IPv4 Manual
+      Direccion: 192.168.123.100
+      Mascara:   255.255.255.0
+      Gateway:   (vacio)
+
+    Verificar:
+      ping 192.168.123.161   # IP del G1
+
+
+════════════════════════════════════════════════════════════════════════════════
+ PASO 5 — ROS2 JAZZY + G1 (LiDAR, topics, SLAM)
+════════════════════════════════════════════════════════════════════════════════
+
+  5.1 Compilar mensajes Unitree (una sola vez)
+  ─────────────────────────────────────────────
+    cd /home/udc/Unitree_G1
+    bash ros2_ws/build_msgs.sh
+    # Compila: unitree_hg, unitree_go, unitree_api
+
+  5.2 Uso rapido con robot conectado
+  ────────────────────────────────────
+    source ros2_ws/setup_g1.sh enp7s0   # configura CycloneDDS
+    ros2 topic list                       # topics del robot
+
+  5.3 SLAM con LiDAR built-in del G1
+  ─────────────────────────────────────
+    # Opcion 1 — kiss-icp (sin compilacion extra):
+    sudo apt install ros-jazzy-kiss-icp
+    source ros2_ws/setup_g1.sh enp7s0
+    ros2 run kiss_icp_ros odometry_node \
+      --ros-args -r pointcloud:=/utlidar/cloud
+
+    # Opcion 2 — slamG1 / keyDemo (mapeo + navegacion autonoma):
+    source ros2_ws/setup_g1.sh enp7s0
+    cd humanoide/unitree_slam_example/example/build
+    ./keyDemo enp7s0
+
+    # Visualizar en RViz2 (otra terminal):
+    source ros2_ws/setup_g1.sh enp7s0
+    rviz2 -d humanoide/unitree_slam_example/rviz2/mapping.rviz
+
+  5.4 Recompilar keyDemo si es necesario
+  ───────────────────────────────────────
+    # (El ejecutable ya esta compilado — solo si cambia el codigo fuente)
+    source ros2_ws/setup_g1.sh enp7s0
+    cd humanoide/unitree_slam_example/example/build
+    cmake .. && make
+
+
+════════════════════════════════════════════════════════════════════════════════
+ PASO 6 — VERIFICACION FINAL
+════════════════════════════════════════════════════════════════════════════════
+
+  Simulacion MuJoCo (sin robot fisico):
+    conda activate /home/udc/Humanoide/G1/envs/g1_udc
+    cd /home/udc/Unitree_G1
+    python simulacion/sim_motion_policies.py motion_agacharse.yaml
+
+  SDK Bridge — testear deploy sin robot:
+    conda activate /home/udc/Humanoide/G1/envs/g1_udc
+    cd /home/udc/Unitree_G1
+    python simulacion/sdk_bridge/run_g1_bridge.py
+    # En otra terminal:
+    python despliegue/deploy_motion.py lo motion_agacharse.yaml
+
+  Genesis GPU (entrenamiento):
+    conda activate hgen
+    python -c "import genesis as gs; gs.init(backend=gs.cuda); print('Genesis GPU OK')"
+
+  Isaac Lab (joints G1):
+    conda run -n isaaclab python codigos/isaac_sim/inspect_g1_joints.py
+
+  ROS2 + G1 topics (robot conectado):
+    source /home/udc/Humanoide/G1/ros2_ws/setup_g1.sh enp7s0
+    ros2 topic list
+
+
+════════════════════════════════════════════════════════════════════════════════
+ RESUMEN RAPIDO — instalar todo desde cero
+════════════════════════════════════════════════════════════════════════════════
+
+  # 0. Sistema
+  sudo apt install -y build-essential git cmake python3-dev libyaml-cpp-dev
+  sudo apt install -y ros-jazzy-rmw-cyclonedds-cpp ros-jazzy-rosidl-generator-dds-idl
+  sudo apt install -y ros-jazzy-kiss-icp
+
+  # 1. Clonar repo
+  git clone <URL> /home/udc/Unitree_G1
+  cd /home/udc/Unitree_G1
+
+  # 2. Entorno g1_udc
+  conda env create -f envs/g1_udc_backup.yml
+  # si falla el backup:
+  conda create -p envs/g1_udc python=3.11 -y
+  conda activate envs/g1_udc
+  pip install torch==2.9.0 torchvision==0.24.0 --index-url https://download.pytorch.org/whl/cu130
+  pip install mujoco==3.2.3 mujoco-python-viewer==0.1.4 glfw==2.9.0 pygame
+  pip install unitree-sdk2py==1.0.1 cyclonedds==0.10.2 ultralytics==8.4.41
+  conda install -c conda-forge pinocchio -y
+  pip install casadi meshcat rerun-sdk==0.20.1 lerobot pyqt5 numpy pyyaml scipy
+
+  # 3. Entorno hgen
+  conda create -n hgen python=3.10 -y
+  conda activate hgen
+  pip install torch==2.11.0 torchvision --index-url https://download.pytorch.org/whl/cu130
+  pip install genesis-world==0.2.1
+  pip install -e entrenamiento/
+
+  # 4. Entorno isaaclab (si no esta instalado — ver PASO 3 para detalle)
+  # Isaac Sim 5.1.0 + Isaac Lab 2.3.2 en /home/udc/IsaacLab/
+  conda activate isaaclab
+  pip install "cryptography==44.0.0"
+  pip install -e entrenamiento/isaac_rl_lab/source/unitree_rl_lab/
+
+  # 5. CycloneDDS
+  echo 'export CYCLONEDDS_HOME=/home/udc/Humanoide/G1/humanoide/cyclonedds_install' >> ~/.bashrc
+  source ~/.bashrc
+
+  # 6. Mensajes ROS2
+  bash ros2_ws/build_msgs.sh
+
+================================================================================

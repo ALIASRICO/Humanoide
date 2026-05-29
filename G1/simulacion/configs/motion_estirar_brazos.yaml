@@ -1,0 +1,32 @@
+# Config para política de movimiento ESTIRAR en MuJoCo 29-DOF
+policy_path: "{REPO_ROOT}/politicas/motion_estirar_DR_jit.pt"
+xml_path: "{REPO_ROOT}/escenas/scene_29dof.xml"
+
+simulation_duration: 30.0
+simulation_dt: 0.0002
+control_decimation: 50
+
+kps: [500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500]
+kds: [25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0]
+
+default_angles: [-0.1, 0.0, 0.0, 0.3, -0.2, 0.0, -0.1, 0.0, 0.0, 0.3, -0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+action_scale: 0.5
+action_clip: 1.2
+num_actions: 29
+num_obs: 62
+
+period_s: 3.0
+periodic: true
+
+pose_A:
+  left_shoulder_pitch_joint: -1.4
+  right_shoulder_pitch_joint: -1.4
+  left_shoulder_roll_joint: 0.1
+  right_shoulder_roll_joint: -0.1
+  left_elbow_joint: 0.0
+  right_elbow_joint: 0.0
+
+pose_B:
+  left_shoulder_pitch_joint: 0.0
+  right_shoulder_pitch_joint: 0.0

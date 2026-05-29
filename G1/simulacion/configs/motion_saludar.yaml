@@ -1,0 +1,38 @@
+# Config para política de movimiento SALUDAR en MuJoCo 29-DOF
+policy_path: "{REPO_ROOT}/politicas/motion_saludar_DR_jit.pt"
+xml_path: "{REPO_ROOT}/escenas/scene_29dof.xml"
+
+simulation_duration: 30.0
+simulation_dt: 0.0002  # CRÍTICO: dt pequeño para estabilidad del modelo 29-DOF
+control_decimation: 50  # 100 Hz de control (0.0002 * 50 = 0.01s)
+
+# Gains calibrados para MuJoCo 29-DOF
+kps: [500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500]
+kds: [25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0]
+
+# Genesis default angles (pose estable)
+default_angles: [-0.1, 0.0, 0.0, 0.3, -0.2, 0.0, -0.1, 0.0, 0.0, 0.3, -0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+action_scale: 0.5
+action_clip: 0.8
+num_actions: 29
+num_obs: 62
+
+# Parámetros del movimiento
+period_s: 1.0
+periodic: true
+
+# Poses objetivo (deltas respecto al default)
+pose_A:
+  right_shoulder_pitch_joint: -1.2
+  right_shoulder_roll_joint: -0.3
+  right_shoulder_yaw_joint: 0.0
+  right_elbow_joint: 0.8
+  right_wrist_pitch_joint: 0.5
+
+pose_B:
+  right_shoulder_pitch_joint: -1.2
+  right_shoulder_roll_joint: -0.3
+  right_shoulder_yaw_joint: 0.0
+  right_elbow_joint: 0.8
+  right_wrist_pitch_joint: -0.5

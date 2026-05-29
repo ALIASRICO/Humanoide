@@ -1,0 +1,112 @@
+# @package _global_
+
+defaults:
+  - legged_base
+
+env:
+  _target_: humanoidverse.envs.motion.motion_env.MotionEnv
+  _recursive_: False
+  config:
+    robot: ${robot}
+    domain_rand: ${domain_rand}
+    rewards: ${rewards}
+    terrain: ${terrain}
+    obs: ${obs}
+    env_spacing: 0.0
+    max_episode_length_s: 6
+
+    normalization:
+      clip_actions: 100.0
+      clip_observations: 100.0
+
+    termination:
+      terminate_by_contact: False
+      terminate_by_gravity: True
+      terminate_by_low_height: True
+      terminate_when_close_to_dof_pos_limit: False
+      terminate_when_close_to_dof_vel_limit: False
+      terminate_when_close_to_torque_limit: False
+
+    termination_scales:
+      termination_min_base_height: 0.5
+      termination_gravity_x: 0.9
+      termination_gravity_y: 0.9
+      termination_close_to_dof_pos_limit: 0.98
+      termination_close_to_dof_vel_limit: 0.98
+      termination_close_to_torque_limit: 0.98
+
+    motion:
+      motion_id: 0
+      saludar:
+        motion_id: 0
+        motion_name: "saludar"
+        periodic: True
+        period_s: 1.0
+        pose_A:
+          right_shoulder_pitch_joint: -1.2
+          right_shoulder_roll_joint: -0.3
+          right_shoulder_yaw_joint: 0.0
+          right_elbow_joint: 0.8
+          right_wrist_pitch_joint: 0.5
+        pose_B:
+          right_wrist_pitch_joint: -0.5
+
+      agacharse:
+        motion_id: 1
+        motion_name: "agacharse"
+        periodic: True
+        period_s: 4.0       # 2s bajar + 2s subir
+        pose_A:             # postura de pie (= default_dof_pos, explícito para claridad)
+          left_hip_pitch_joint: -0.1
+          right_hip_pitch_joint: -0.1
+          left_knee_joint: 0.3
+          right_knee_joint: 0.3
+          left_ankle_pitch_joint: -0.2
+          right_ankle_pitch_joint: -0.2
+        pose_B:             # squat target
+          left_hip_pitch_joint: -0.5
+          right_hip_pitch_joint: -0.5
+          left_knee_joint: 0.8
+          right_knee_joint: 0.8
+          left_ankle_pitch_joint: -0.1
+          right_ankle_pitch_joint: -0.1
+
+      estirar_brazos:
+        motion_id: 2
+        motion_name: "estirar_brazos"
+        periodic: False
+        duration_s: 1.5
+        pose_target:
+          left_shoulder_pitch_joint: -1.4
+          right_shoulder_pitch_joint: -1.4
+          left_shoulder_roll_joint: 0.1
+          right_shoulder_roll_joint: -0.1
+          left_elbow_joint: 0.0
+          right_elbow_joint: 0.0
+
+      mover_munecas:
+        motion_id: 3
+        motion_name: "mover_munecas"
+        periodic: True
+        period_s: 1.2
+        pose_A:
+          left_shoulder_pitch_joint: -0.6
+          right_shoulder_pitch_joint: -0.6
+          left_elbow_joint: 0.5
+          right_elbow_joint: 0.5
+          left_wrist_roll_joint: 1.0
+          right_wrist_roll_joint: -1.0
+          left_wrist_pitch_joint: 0.4
+          right_wrist_pitch_joint: 0.4
+        pose_B:
+          left_wrist_roll_joint: -1.0
+          right_wrist_roll_joint: 1.0
+          left_wrist_pitch_joint: -0.4
+          right_wrist_pitch_joint: -0.4
+
+log_task_name: motion
+
+eval_overrides:
+  env:
+    config:
+      max_episode_length_s: 100000

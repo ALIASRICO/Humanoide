@@ -1,0 +1,43 @@
+[Unit]
+Description=R1 Inference Stack (ROS2 + ONNX policy + SDK bridge)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=usuario
+Group=usuario
+WorkingDirectory=/home/usuario/r1_workspace/ros2_ws
+
+# Entorno
+Environment="HOME=/home/usuario"
+Environment="PATH=/home/usuario/miniforge3/envs/env_isaaclab/bin:/usr/bin:/bin"
+Environment="LD_LIBRARY_PATH=/usr/local/cuda-12.1/lib64:/opt/ros/humble/lib:/home/usuario/r1_workspace/ros2_ws/install/r1_msgs/lib"
+Environment="ROS_DOMAIN_ID=42"
+Environment="RMW_IMPLEMENTATION=rmw_cyclonedds_cpp"
+Environment="UNITREE_NETWORK_INTERFACE=eth0"
+Environment="UNITREE_DOMAIN_ID=42"
+
+# Ejecutar el bringup
+ExecStart=/bin/bash -lc 'source /opt/ros/humble/setup.bash && \
+                       source /home/usuario/r1_workspace/ros2_ws/install/setup.bash && \
+                       ros2 launch r1_bringup real.launch.py'
+
+# Reinicio automático
+Restart=on-failure
+RestartSec=5
+
+# Real-time
+LimitRTPRIO=99
+LimitNICE=-20
+LimitMEMLOCK=infinity
+LimitNOFILE=65536
+
+# Hardening
+NoNewPrivileges=false
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+
+[Install]
+WantedBy=multi-user.target

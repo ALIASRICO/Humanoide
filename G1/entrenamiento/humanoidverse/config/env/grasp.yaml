@@ -1,0 +1,50 @@
+# @package _global_
+
+defaults:
+  - legged_base
+
+env:
+  _target_: humanoidverse.envs.grasp.grasp.GraspEnv
+  _recursive_: False
+  config:
+    robot: ${robot}
+    domain_rand: ${domain_rand}
+    rewards: ${rewards}
+    terrain: ${terrain}
+    obs: ${obs}
+    env_spacing: 2.5
+    max_episode_length_s: 10
+
+    normalization:
+      clip_actions: 100.0
+      clip_observations: 100.0
+
+    termination:
+      terminate_by_contact: False
+      terminate_by_gravity: True
+      terminate_by_low_height: True
+      terminate_when_close_to_dof_pos_limit: False
+      terminate_when_close_to_dof_vel_limit: False
+      terminate_when_close_to_torque_limit: False
+
+    termination_scales:
+      termination_min_base_height: 0.5
+      termination_gravity_x: 0.9
+      termination_gravity_y: 0.9
+      termination_close_to_dof_pos_limit: 0.98
+      termination_close_to_dof_vel_limit: 0.98
+      termination_close_to_torque_limit: 0.98
+
+    grasp:
+      box_size: [0.06, 0.06, 0.06]
+      box_default_pos: [0.40, 0.0, 0.78]
+      table_size: [0.6, 0.4, 0.75]
+      table_pos: [0.40, 0.0, 0.375]
+      box_randomization_range: 0.05
+
+log_task_name: grasp
+
+eval_overrides:
+  env:
+    config:
+      max_episode_length_s: 100000

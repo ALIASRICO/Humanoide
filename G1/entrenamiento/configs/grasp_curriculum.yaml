@@ -1,0 +1,91 @@
+# Curriculum progresivo para politica de agarre G1 EDU
+# Stage 1: caja fija (0-5K) - aprender a aproximar palmas
+# Stage 2: posicion X variable (5K-15K) - aprender profundidad
+# Stage 3: XY + orientacion (15K-30K) - full 2D + yaw
+# Stage 4: full DR (30K-50K) - generalizacion completa
+
+curriculum:
+  stage_1:
+    iterations: [0, 5000]
+    description: "Caja fija justo enfrente, aprender aproximacion"
+    box_pos_range:
+      x: [0.50, 0.50]
+      y: [0.00, 0.00]
+      z: [0.15, 0.15]
+    box_orient_range:
+      yaw_deg: [0.0, 0.0]
+    reward_weights:
+      approach: 3.0
+      closure: 1.0
+      contact: 0.5
+      lift: 0.0
+    success_threshold:
+      n_contacts_min: 2
+
+  stage_2:
+    iterations: [5000, 15000]
+    description: "Posicion X variable, orientacion pequena"
+    box_pos_range:
+      x: [0.40, 0.65]
+      y: [0.00, 0.00]
+      z: [0.15, 0.15]
+    box_orient_range:
+      yaw_deg: [-15.0, 15.0]
+    reward_weights:
+      approach: 2.0
+      closure: 2.0
+      contact: 1.5
+      lift: 0.5
+    success_threshold:
+      n_contacts_min: 3
+
+  stage_3:
+    iterations: [15000, 30000]
+    description: "Posicion XY + orientacion media, altura variable"
+    box_pos_range:
+      x: [0.40, 0.70]
+      y: [-0.20, 0.20]
+      z: [0.10, 0.20]
+    box_orient_range:
+      yaw_deg: [-30.0, 30.0]
+    reward_weights:
+      approach: 1.0
+      closure: 2.0
+      contact: 3.0
+      lift: 3.0
+    success_threshold:
+      n_contacts_min: 4
+      box_lift_min: 0.03
+
+  stage_4:
+    iterations: [30000, 50000]
+    description: "Full randomization, full DR"
+    box_pos_range:
+      x: [0.35, 0.75]
+      y: [-0.25, 0.25]
+      z: [0.08, 0.25]
+    box_orient_range:
+      yaw_deg: [-45.0, 45.0]
+    reward_weights:
+      approach: 1.0
+      closure: 1.5
+      contact: 3.0
+      lift: 5.0
+    success_threshold:
+      n_contacts_min: 4
+      box_lift_min: 0.05
+
+domain_randomization:
+  box_mass_range: [0.3, 3.0]
+  box_friction_range: [0.4, 1.5]
+  finger_kp_scale_range: [0.8, 1.2]
+  finger_kd_scale_range: [0.8, 1.2]
+  contact_sensor_noise_std: 0.1
+  joint_pos_noise_std: 0.005
+  joint_vel_noise_std: 0.02
+  ctrl_delay_steps: [0, 2]
+
+training:
+  episode_length_steps: 300
+  control_freq_hz: 50
+  n_envs: 4096

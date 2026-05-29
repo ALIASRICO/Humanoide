@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>r1_bringup</name>
+  <version>0.1.0</version>
+  <description>Launch files, configs y URDF para el R1.</description>
+  <maintainer email="dev@r1.local">R1 Project</maintainer>
+  <license>BSD-3-Clause</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>r1_inference</exec_depend>
+  <exec_depend>r1_sim_bridge</exec_depend>
+  <exec_depend>r1_teleop</exec_depend>
+  <exec_depend>r1_msgs</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

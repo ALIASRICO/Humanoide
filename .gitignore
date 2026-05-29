@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Entornos virtuales
+envs/g1_udc/
+G1/envs/g1_udc/
+**/envs/g1_udc/
+*.yml.bak
+
+# Archivos de log y temporales
+*.log
+*.TXT
+*.bak
+MUJOCO_LOG.TXT
+
+# Logs de entrenamiento (TensorBoard, Hydra)
+G1/entrenamiento/logs/
+G1/entrenamiento/runs/
+**/events.out.tfevents.*
+
+# Binarios compilados grandes
+*.so
+*.so.*
+*.dylib
+
+# Políticas — solo los checkpoints de entrenamiento son grandes
+# Los archivos en politicas/ SÍ se trackean (ver !politicas/*.pt abajo)
+*.pt
+!politicas/*.pt
+
+# Formatos de modelo 3D pesados
+*.onnx
+*.usd
+
+# Archivos URDF (texto XML, sí se trackean)
+# *.urdf  ← eliminado para trackear los modelos del robot
+
+# SDKs grandes de Unitree (no necesarios para Python, disponibles en sus repos)
+humanoide/mujoco/
+humanoide/unitree_sdk2/
+humanoide/unitree_mujoco/
+humanoide/unitree_slam_example/
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*~
+
+# Datos y artefactos de sesión
+context/claude/session_artifacts/
+
+# Herramienta Sisyphus
+.sisyphus/
+
+# Datasets (demasiado grandes para git)
+dataset/
+
+# Assets hash (auto-generado por Isaac)
+escenas/.asset_hash
+
+# Logs de entrenamiento (checkpoints pueden ser varios GB)
+entrenamiento/logs/
+entrenamiento/runs/
+entrenamiento/outputs/

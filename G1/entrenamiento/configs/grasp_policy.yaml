@@ -1,0 +1,49 @@
+obs:
+  pos_caja_rel: 3
+  orient_caja_quat: 4
+  q_arm_left: 7
+  q_arm_right: 7
+  q_finger_left: 7
+  q_finger_right: 7
+  dq_arm_left: 7
+  dq_arm_right: 7
+  dq_finger_left: 7
+  dq_finger_right: 7
+  touch_left: 6
+  touch_right: 6
+  prev_action: 28
+  total: 103
+
+actor:
+  input_dim: 103
+  hidden_dims: [512, 256, 128]
+  activation: elu
+  output_dim: 28
+  output_activation: tanh
+  action_scale: 1.0
+
+critic:
+  input_dim: 103
+  hidden_dims: [512, 256, 128]
+  activation: elu
+  output_dim: 1
+
+ppo:
+  num_envs: 4096
+  num_steps: 24
+  learning_rate: 1.0e-4
+  entropy_coef: 0.01
+  clip_range: 0.2
+  gamma: 0.99
+  gae_lambda: 0.95
+  max_grad_norm: 1.0
+  num_epochs: 5
+  minibatch_size: 1024
+  total_iterations: 50000
+  save_interval: 1000
+  log_interval: 100
+
+export:
+  output_path: "politicas/model_grasp_jit.pt"
+  input_dim: 103
+  output_dim: 28

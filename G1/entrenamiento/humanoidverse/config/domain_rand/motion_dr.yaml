@@ -1,0 +1,41 @@
+# @package _global_
+# Domain Randomization para políticas de movimiento (sim-to-real)
+# Moderado: cubre gap Genesis→MuJoCo→Real sin romper el aprendizaje
+
+domain_rand:
+  # Empujones pequeños — el robot debe mantener postura durante movimientos
+  push_robots: True
+  push_interval_s: [8, 15]
+  max_push_vel_xy: 0.3
+
+  # Variación de masa — ±15% (cubre diferencias de calibración real)
+  randomize_link_mass: True
+  link_mass_range: [0.85, 1.15]
+
+  # Centro de masa — ±5cm (cubre cargas asimétricas)
+  randomize_base_com: True
+  base_com_range:
+    x: [-0.05, 0.05]
+    y: [-0.05, 0.05]
+    z: [-0.05, 0.05]
+
+  # Gains PD — ±20% (cubre diferencia damping Genesis↔MuJoCo↔Real)
+  randomize_pd_gain: True
+  kp_range: [0.8, 1.2]
+  kd_range: [0.8, 1.2]
+
+  # Fricción — ±40% (cubre diferentes superficies)
+  randomize_friction: True
+  friction_range: [0.6, 1.4]
+
+  # Ruido de torque — simula imperfecciones de los motores reales
+  randomize_torque_rfi: True
+  rfi_lim: 0.06
+  randomize_rfi_lim: True
+  rfi_lim_range: [0.5, 1.5]
+
+  # Delay de control — simula latencia del SDK (0-2 pasos = 0-20ms)
+  randomize_ctrl_delay: True
+  ctrl_delay_step_range: [0, 2]
+
+  randomize_base_mass: False

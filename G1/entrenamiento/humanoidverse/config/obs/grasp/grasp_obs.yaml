@@ -1,0 +1,84 @@
+# @package _global_
+
+obs:
+  obs_dict:
+    actor_obs: [
+      base_lin_vel,
+      base_ang_vel,
+      projected_gravity,
+      dof_pos,
+      dof_vel,
+      actions,
+      box_pos_rel,
+      left_hand_to_box,
+      right_hand_to_box,
+      contact_left,
+      contact_right,
+    ]
+
+    critic_obs: [
+      base_lin_vel,
+      base_ang_vel,
+      projected_gravity,
+      dof_pos,
+      dof_vel,
+      actions,
+      box_pos_rel,
+      left_hand_to_box,
+      right_hand_to_box,
+      contact_left,
+      contact_right,
+    ]
+
+  obs_auxiliary:
+    history_long: {
+      dof_pos: 20,
+      dof_vel: 2,
+      actions: 15,
+    }
+    history_short: {
+      dof_pos: 3,
+      dof_vel: 2,
+      actions: 1,
+    }
+
+  obs_scales: {
+    base_lin_vel: 2.0,
+    base_ang_vel: 0.25,
+    projected_gravity: 1.0,
+    dof_pos: 1.0,
+    dof_vel: 0.05,
+    actions: 1.0,
+    box_pos_rel: 1.0,
+    left_hand_to_box: 1.0,
+    right_hand_to_box: 1.0,
+    contact_left: 0.1,
+    contact_right: 0.1,
+  }
+
+  noise_scales: {
+    base_lin_vel: 0.0,
+    base_ang_vel: 0.0,
+    projected_gravity: 0.0,
+    dof_pos: 0.0,
+    dof_vel: 0.0,
+    actions: 0.0,
+    box_pos_rel: 0.0,
+    left_hand_to_box: 0.0,
+    right_hand_to_box: 0.0,
+    contact_left: 0.0,
+    contact_right: 0.0,
+  }
+
+  obs_dims:
+    - base_lin_vel: 3
+    - base_ang_vel: 3
+    - projected_gravity: 3
+    - dof_pos: ${robot.dof_obs_size}
+    - dof_vel: ${robot.dof_obs_size}
+    - actions: ${robot.dof_obs_size}
+    - box_pos_rel: 3
+    - left_hand_to_box: 3
+    - right_hand_to_box: 3
+    - contact_left: 3
+    - contact_right: 3

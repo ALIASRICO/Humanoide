@@ -1,0 +1,76 @@
+# Config para política de movimiento AGACHARSE V10 en MuJoCo 29-DOF
+# Entrenada con action_scale=0.25, trayectoria periódica pie→squat (period=4s)
+# RESULTADO: 0 caídas en 30s, squat 88-94%, 0 clips — sim-to-sim resuelto 2026-05-22
+policy_path: "{REPO_ROOT}/politicas/motion_agacharse_v10_jit.pt"
+xml_path: "{REPO_ROOT}/escenas/scene_29dof.xml"
+
+simulation_duration: 30.0
+simulation_dt: 0.002   # igual que sim_hv.py (locomotion) — dt fino para estabilidad MuJoCo
+control_decimation: 10 # 50 Hz — igual que Genesis (0.002×10=0.02s por paso de control)
+
+# DOF order: left_hip_pitch, roll, yaw, knee, ankle_pitch, ankle_roll (x2)
+#            waist_yaw, roll, pitch
+#            left_shoulder_pitch, roll, yaw, elbow, wrist_roll, pitch, yaw (x2)
+# kp/kd mixto: piernas=oficial Unitree (V10 training), waist+brazos=Genesis g1_29dof.yaml
+# CRÍTICO: V10 sólo sobreescribió kp de piernas; waist(400) y brazos(90/60) son Genesis
+kps: [ 40.2,  40.2,  40.2,  99.1, 28.5, 28.5,
+       40.2,  40.2,  40.2,  99.1, 28.5, 28.5,
+      400.0, 400.0, 400.0,
+       90.0,  60.0,  20.0,  60.0,  4.0,  4.0,  4.0,
+       90.0,  60.0,  20.0,  60.0,  4.0,  4.0,  4.0]
+
+kds: [2.6, 2.6, 2.6, 6.3, 1.8, 1.8,
+      2.6, 2.6, 2.6, 6.3, 1.8, 1.8,
+      5.0, 5.0, 5.0,
+      2.0, 1.0, 0.4, 1.0, 0.2, 0.2, 0.2,
+      2.0, 1.0, 0.4, 1.0, 0.2, 0.2, 0.2]
+
+default_angles: [-0.1, 0.0, 0.0, 0.3, -0.2, 0.0,
+                 -0.1, 0.0, 0.0, 0.3, -0.2, 0.0,
+                  0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+action_scale: 0.25  # V9: entrenado con 0.25 (igual que locomotion)
+
+# Límites de torque (dof_effort_limit_list de g1_29dof.yaml) — igual que Genesis clip_torques=True
+torque_limits: [88.0, 88.0, 88.0, 139.0, 50.0, 50.0,
+                88.0, 88.0, 88.0, 139.0, 50.0, 50.0,
+                88.0, 50.0, 50.0,
+                25.0, 25.0, 25.0, 25.0, 25.0, 5.0, 5.0,
+                25.0, 25.0, 25.0, 25.0, 25.0, 5.0, 5.0]
+action_clip: 3.0    # V7: coincide con Genesis clip_actions=3.0 — evita inestabilidad numérica en MuJoCo
+num_actions: 29
+num_obs: 94
+# CRÍTICO: obs en orden ALFABÉTICO (HumanoidVerse sorted(obs_keys)):
+#   [0:3]   base_ang_vel (×0.25)
+#   [3:32]  dof_pos (absoluto)
+#   [32:61] dof_vel (×0.05)
+#   [61]    phase_signal
+#   [62:65] projected_gravity
+#   [65:94] q_target
+
+# Escalas de obs (deben coincidir con agacharse_obs.yaml)
+dof_vel_scale: 0.05
+ang_vel_scale: 0.25
+
+period_s: 4.0      # V5: 2s bajar + 2s subir
+periodic: true
+
+control_mode: hybrid_legs_waist
+
+pose_A:             # postura de pie (= default_dof_pos)
+  left_hip_pitch_joint: -0.1
+  right_hip_pitch_joint: -0.1
+  left_knee_joint: 0.3
+  right_knee_joint: 0.3
+  left_ankle_pitch_joint: -0.2
+  right_ankle_pitch_joint: -0.2
+
+pose_B:             # squat target
+  left_hip_pitch_joint: -0.5
+  right_hip_pitch_joint: -0.5
+  left_knee_joint: 0.8
+  right_knee_joint: 0.8
+  left_ankle_pitch_joint: -0.1
+  right_ankle_pitch_joint: -0.1

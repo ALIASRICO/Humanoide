@@ -1,0 +1,430 @@
+================================================================================
+  GUIA RAPIDA — Unitree G1 / Universidad de Colombia
+  Repo: /home/udc/Unitree_G1
+================================================================================
+
+
+════════════════════════════════════════════════════════════════════════════════
+ 1. COMO ABRIR EL PROYECTO
+════════════════════════════════════════════════════════════════════════════════
+
+  Abrir VS Code con todo el proyecto:
+    code /home/udc/Unitree_G1
+
+  La estructura principal es:
+    entrenamiento/              → codigo de entrenamiento RL (HumanoidVerse + Genesis)
+    entrenamiento/isaac_rl_lab/ → entrenamiento RL de locomocion en Isaac Lab
+    simulacion/                 → validacion en MuJoCo antes del robot real
+    simulacion/sdk_bridge/      → sim MuJoCo con interfaz DDS identica al robot real
+    simulacion/isaac_sim/       → simulacion de manipulacion en Isaac Sim (pick/stack)
+    despliegue/                 → control del robot fisico (SDK)
+    codigos/                    → visión, LIDAR, secuencias, SDK de alto nivel
+    codigos/isaac_sim/          → utilidades Isaac Sim (inspeccion de joints)
+    codigos/teleoperacion/      → IK de brazos + grabacion de episodios
+    codigos/imitacion/          → LeRobot pipeline (eval, editor, conversores)
+    politicas/                  → archivos .pt (politicas entrenadas)
+    escenas/                    → modelos XML/USD del robot (MuJoCo + Isaac Sim)
+    ros2_ws/                    → workspace ROS2 Jazzy (msgs Unitree + SLAM)
+
+
+════════════════════════════════════════════════════════════════════════════════
+ 2. ENTORNOS CONDA — CUAL USAR PARA CADA COSA
+════════════════════════════════════════════════════════════════════════════════
+
+  TAREA                          ENTORNO             COMO ACTIVAR
+  ─────────────────────────────────────────────────────────────────
+  Ver simulaciones MuJoCo    →   g1_udc    →   conda activate /home/udc/Humanoide/G1/envs/g1_udc
+  Despliegue robot fisico    →   g1_udc    →   conda activate /home/udc/Humanoide/G1/envs/g1_udc
+  Entrenar RL (HumanoidVerse)→   hgen      →   conda activate hgen
+  Isaac Sim / Isaac Lab      →   isaaclab  →   conda activate isaaclab
+  LIDAR / ROS 2              →   sistema   →   source /opt/ros/jazzy/setup.bash
+
+  NOTA: g1_udc esta DENTRO del repo en envs/g1_udc/
+  No mover ni borrar esa carpeta.
+
+
+════════════════════════════════════════════════════════════════════════════════
+ 3. SIMULACIONES MUJOCO — LOCOMOTION (12-DOF)
+════════════════════════════════════════════════════════════════════════════════
+
+  Ejecutar SIEMPRE desde la raiz del repo: /home/udc/Unitree_G1
+
+  ── Politica HumanoidVerse (model_7000_jit.pt  —  48 obs) ──
+
+    conda activate /home/udc/Humanoide/G1/envs/g1_udc
+    cd /home/udc/Unitree_G1
+    python simulacion/sim_hv.py g1_hv.yaml
+
+  ── Politica original (motion.pt  —  47 obs) ──
+
+    python simulacion/sim_motion.py g1.yaml
+
+  Que deberia pasar:
+    - Se abre la ventana de MuJoCo con el robot G1
+    - El robot se levanta y camina hacia adelante (vx = 0.5 m/s)
+    - Consola imprime metricas cada 50 pasos
+
+  Cambiar velocidad de comando:
+    Editar cmd_init en el yaml: [vx, vy, wz]  (m/s y rad/s)
+
+
+════════════════════════════════════════════════════════════════════════════════
+ 3b. SIMULACIONES MUJOCO — MOVIMIENTO 29-DOF (NUEVO)
+════════════════════════════════════════════════════════════════════════════════
+
+  Politicas de movimiento periodico (agacharse, munecas):
+
+  ── Agacharse (hybrid_legs_waist, 94 obs) ──
+
+    conda activate /home/udc/Humanoide/G1/envs/g1_udc
+    cd /home/udc/Unitree_G1
+    python simulacion/sim_motion_policies.py motion_agacharse.yaml
+
+  ── Munecas (hybrid_arms, 62 obs) — con visor visual ──
+
+    python simulacion/sim_motion_policies.py motion_munecas.yaml --viewer
+
+  Resultados esperados:
+    Agacharse  → 0 caidas en 30s, rodillas alcanzan 88-94% del squat
+    Munecas    → 0 caidas en 30s, brazos oscilando ±1 rad, 30s estable
+
+  ADVERTENCIA: El orden del obs es ALFABETICO (sorted), no el orden del YAML.
+  Si el robot cae en <1s → revisar el orden del obs en el script.
+
+
+════════════════════════════════════════════════════════════════════════════════
+ 4. CONECTAR AL ROBOT FISICO
+════════════════════════════════════════════════════════════════════════════════
+
+  Paso 1 — Apagar sport_mode en la app Unitree (OBLIGATORIO para control bajo nivel)
+
+  Paso 2 — Configurar red (solo la primera vez)
+    IP estatica en Ubuntu: Ajustes → Red → Cableado → Editar → IPv4 Manual
+      IP:      192.168.123.100
+      Mascara: 255.255.255.0
+      Gateway: (dejar vacio)
+
+  Paso 3 — Verificar conexion
+    ping 192.168.123.161
+
+  Paso 4 — Configurar CycloneDDS (necesario para el SDK)
+    export CYCLONEDDS_HOME=/home/udc/Humanoide/G1/humanoide/cyclonedds_install
+    (agregar al ~/.bashrc para no repetirlo)
+
+  Paso 5 — Ver la interfaz de red
+    ip link show
+    (buscar el nombre del ethernet, ej: enp7s0)
+
+
+════════════════════════════════════════════════════════════════════════════════
+ 5. DESPLIEGUE — LOCOMOTION 12-DOF
+════════════════════════════════════════════════════════════════════════════════
+
+  conda activate /home/udc/Humanoide/G1/envs/g1_udc
+  export CYCLONEDDS_HOME=/home/udc/Humanoide/G1/humanoide/cyclonedds_install
+  cd /home/udc/Unitree_G1
+
+  # Con model_7000_jit.pt (politica HumanoidVerse)
+  python despliegue/deploy_dual.py enp7s0 g1_hv.yaml
+
+  # Con motion.pt (politica original)
+  python despliegue/deploy_dual.py enp7s0 g1_motion.yaml
+
+  SECUENCIA DE INICIO:
+    1. Robot encendido, LEDs blancos estables, sport_mode apagado
+    2. Ejecutar el script  →  robot flacido (zero torque), sujetalo
+    3. START en mando      →  robot se mueve a posicion inicial (2 seg)
+    4. A en mando          →  politica activa, robot camina
+    5. Joystick izq up/dn  →  vx     |  Joystick izq L/R → vy
+    6. Joystick der L/R    →  wz     |  SELECT → salida suave
+
+
+════════════════════════════════════════════════════════════════════════════════
+ 5b. DESPLIEGUE — MOVIMIENTO PERIODICO 29-DOF (NUEVO)
+════════════════════════════════════════════════════════════════════════════════
+
+  conda activate /home/udc/Humanoide/G1/envs/g1_udc
+  export CYCLONEDDS_HOME=/home/udc/Humanoide/G1/humanoide/cyclonedds_install
+  cd /home/udc/Unitree_G1
+
+  # Agacharse
+  python despliegue/deploy_motion.py enp7s0 motion_agacharse.yaml
+
+  # Munecas
+  python despliegue/deploy_motion.py enp7s0 motion_munecas.yaml
+
+  PROCEDIMIENTO DE SEGURIDAD (PRIMERA VEZ — fuente: Unitree oficial):
+    1. Apagar sport_mode en la app Unitree
+    2. Robot colgado en arnes (pies sin tocar el suelo)
+    3. L2+R2 en mando → modo damping (articulaciones blandas)
+    4. Ejecutar el script → zero torque
+    5. START → robot va a posicion default
+    6. Bajar arnes lentamente hasta que los pies toquen el suelo
+    7. A → politica activa (warmup 3s: movimiento suave al principio)
+    8. Aflojar arnes gradualmente
+    9. SELECT → salida suave
+
+  CAPAS DE SEGURIDAD IMPLEMENTADAS:
+    - Tilt detection: si el robot se inclina >72° → parada automatica
+    - Joint limits: target_q clampeado a limites oficiales del URDF
+    - Warmup ramp: action_scale sube de 0→1 durante los primeros 3s
+
+
+════════════════════════════════════════════════════════════════════════════════
+ 5c. SDK BRIDGE — TESTEAR deploy_motion.py EN MUJOCO (SIN ROBOT)
+════════════════════════════════════════════════════════════════════════════════
+
+  Corre MuJoCo con la MISMA interfaz DDS que el robot real.
+  Permite ejecutar deploy_motion.py exactamente igual que con el robot fisico.
+
+  Terminal 1 — Levantar el bridge:
+    conda activate /home/udc/Humanoide/G1/envs/g1_udc
+    cd /home/udc/Unitree_G1
+    python simulacion/sdk_bridge/run_g1_bridge.py
+
+  Terminal 2 — Correr el deploy (igual que con robot real, pero interfaz "lo"):
+    conda activate /home/udc/Humanoide/G1/envs/g1_udc
+    export CYCLONEDDS_HOME=/home/udc/Humanoide/G1/humanoide/cyclonedds_install
+    python despliegue/deploy_motion.py lo motion_agacharse.yaml
+
+  NOTA: pip install mujoco pygame (si no estan instalados)
+
+
+════════════════════════════════════════════════════════════════════════════════
+ 6. SDK DE ALTO NIVEL — CONTROL POR CODIGO
+════════════════════════════════════════════════════════════════════════════════
+
+  Para mover el robot con comandos de alto nivel (sin politica RL):
+
+    conda activate /home/udc/Humanoide/G1/envs/g1_udc
+    export CYCLONEDDS_HOME=/home/udc/Humanoide/G1/humanoide/cyclonedds_install
+    cd /home/udc/Unitree_G1
+
+  Ejemplo basico — hacer el robot caminar:
+
+    from codigos.robot_fisico.sdk_wrapper import RobotController
+    robot = RobotController(network_interface="enp7s0")
+    robot.move(vx=0.3, vy=0.0, wz=0.0)   # m/s y rad/s
+
+
+════════════════════════════════════════════════════════════════════════════════
+ 7. ENTRENAR UNA POLITICA NUEVA
+════════════════════════════════════════════════════════════════════════════════
+
+  conda activate hgen
+  cd /home/udc/Humanoide/G1/entrenamiento
+
+  # Instalar el paquete (solo la primera vez)
+  pip install -e .
+
+  # Locomotion 12-DOF
+  python humanoidverse/train_agent.py \
+    +simulator=genesis +exp=locomotion +domain_rand=NO_domain_rand \
+    +rewards=loco/reward_g1_12dof_locomotion +robot=g1/g1_12dof \
+    +terrain=terrain_locomotion_plane \
+    +obs=loco/leggedloco_obs_singlestep_withlinvel \
+    num_envs=4096 project_name=G1Locomotion experiment_name=G1_12dof_walking
+
+  # Movimiento 29-DOF (agacharse)
+  python humanoidverse/train_agent.py \
+    +simulator=genesis +exp=motion +domain_rand=motion_DR \
+    +rewards=motion/agacharse_rewards_v5 +robot=g1/g1_29dof \
+    +terrain=terrain_base +obs=motion/agacharse_obs \
+    num_envs=4096 project_name=G1_Motion_DR experiment_name=G1_Agacharse
+
+  Checkpoints en: entrenamiento/logs/
+
+  Exportar a JIT:
+    # 12-DOF
+    python export_politica.py --checkpoint logs/.../model_7000.pt \
+      --output ../politicas/model_7000_jit.pt
+
+    # 29-DOF
+    python export_motion_policy.py logs/.../model_XXXX.pt \
+      ../politicas/mi_politica_jit.pt
+
+  TensorBoard:
+    tensorboard --logdir entrenamiento/logs/
+
+
+════════════════════════════════════════════════════════════════════════════════
+ 7b. IMITACION — RECOLECTAR Y ENTRENAR CON DEMOSTRACIONES
+════════════════════════════════════════════════════════════════════════════════
+
+  Flujo: Grabar episodios → Convertir → Entrenar (ACT) → Evaluar en robot
+
+  1. Grabar episodio (desde teleoperacion o mando):
+     Ver codigos/teleoperacion/README.md
+
+  2. Convertir a formato LeRobot:
+     conda activate /home/udc/Humanoide/G1/envs/g1_udc
+     python codigos/imitacion/utils/convert_unitree_json_to_lerobot.py \
+       --input dataset/mi_tarea --output dataset/mi_tarea_lerobot --fps 30
+
+  3. Editar episodios (GUI):
+     pip install pyqt5
+     python codigos/imitacion/data_editor_EN.py
+
+  4. Entrenar (instalar lerobot primero):
+     pip install lerobot
+     # Ver codigos/imitacion/README.md para comando completo
+
+  5. Evaluar en robot real:
+     python codigos/imitacion/eval_g1.py \
+       --policy politicas/imitacion/mi_politica --robot_interface enp7s0
+
+  SLAM con LiDAR built-in del G1:
+     source ros2_ws/setup_g1.sh enp7s0
+     sudo apt install ros-jazzy-kiss-icp
+     ros2 run kiss_icp_ros odometry_node --ros-args -r pointcloud:=/utlidar/cloud
+
+
+════════════════════════════════════════════════════════════════════════════════
+ 8. SOLUCION DE PROBLEMAS COMUNES
+════════════════════════════════════════════════════════════════════════════════
+
+  PROBLEMA                           SOLUCION
+  ─────────────────────────────────────────────────────────────────────────
+  Robot erratico al activar politica → Apagar sport_mode en la app Unitree
+                                       antes de ejecutar deploy_motion.py
+
+  Robot cae en <1s en MuJoCo         → Orden del obs INCORRECTO. Usar orden
+                                       ALFABETICO (sorted), no el del YAML.
+                                       Ver simulacion/README.md
+
+  Acciones 100% saturadas (MuJoCo)   → pose_B mal configurado. Verificar que
+                                       solo incluye joints que cambian de default.
+
+  ModuleNotFoundError: legged_gym    → Entorno equivocado.
+                                       Usar: conda activate .../envs/g1_udc
+
+  MuJoCo no abre ventana             → export DISPLAY=:0
+
+  Sin respuesta del robot            → ping 192.168.123.161
+                                       Verificar IP estatica del PC
+
+  CycloneDDS error                   → export CYCLONEDDS_HOME=.../cyclonedds_install
+
+  CUDA out of memory (entrenamiento) → Reducir num_envs (ej. 2048)
+
+  Parada automatica (tilt detection) → Robot se inclino >72°. Revisar kp/kd
+                                       o aumentar tilt_limit en el YAML
+
+
+════════════════════════════════════════════════════════════════════════════════
+ 9. ISAAC SIM / ISAAC LAB — SIMULACION Y ENTRENAMIENTO NVIDIA
+════════════════════════════════════════════════════════════════════════════════
+
+  Entorno: isaaclab  (Isaac Sim 5.1.0 + Isaac Lab 2.3.2, en /home/udc/IsaacLab/)
+  GPU requerida: RTX 40xx o RTX 50xx  (compute cap >= 8.9)
+
+  ── 9a. Simulacion de manipulacion (Isaac Sim) ──
+
+    Simula el G1 haciendo pick & place, stacking y mas con la mano DEX1.
+    Usa el mismo protocolo DDS que el robot real → compatible con deploy.
+
+    bash simulacion/isaac_sim/launch_g1.sh [tarea]
+
+    Tareas:
+      pick_place_cylinder  → coger y soltar cilindro con pinza DEX1
+      pick_place_redblock  → coger bloque rojo
+      stack_blocks         → apilar 3 bloques RGB
+      pick_into_drawer     → coger bloque y meterlo en cajon
+      move_cylinder        → mover cilindro con cuerpo completo (29-DOF)
+
+    NOTA: Primera ejecucion tarda ~5 min (compilacion de shaders).
+
+  ── 9b. Entrenamiento RL de locomocion (Isaac Lab) ──
+
+    Entrena politicas de locomocion y de imitacion de movimiento.
+
+    # Entrenar (en segundo plano, puede tardar horas)
+    bash entrenamiento/isaac_rl_lab/launch_g1_train.sh velocity
+
+    # Reproducir politica entrenada
+    bash entrenamiento/isaac_rl_lab/launch_g1_play.sh velocity
+
+    Tareas disponibles:
+      velocity  → locomocion por velocidad (default)
+      dance     → imitar baile Dance-102 (mocap BVH)
+      gangnam   → imitar Gangnam Style (mocap BVH)
+
+  ── 9c. Inspeccionar joints del G1 en Isaac Lab ──
+
+    conda run -n isaaclab python codigos/isaac_sim/inspect_g1_joints.py
+
+
+════════════════════════════════════════════════════════════════════════════════
+ 10. ROS2 JAZZY + G1 (LIDAR, IMU, TOPICS)
+════════════════════════════════════════════════════════════════════════════════
+
+  PROBLEMA COMUN: RViz no muestra nada cuando conectas el robot fisico.
+  CAUSA: ROS2 Jazzy usa FastDDS por defecto. El G1 usa CycloneDDS 0.10.x.
+         Son incompatibles → cero topics visibles.
+  SOLUCION: Instalar el bridge RMW y configurar CYCLONEDDS_URI.
+
+  PASO 1 — Instalar el paquete (solo una vez, requiere sudo):
+    ! bash ros2_ws/install_deps.sh
+
+  PASO 2 — Compilar mensajes Unitree (solo una vez):
+    bash ros2_ws/build_msgs.sh
+
+  PASO 3 — Ver topics del robot (robot conectado por cable):
+    source ros2_ws/setup_g1.sh enp7s0
+    ros2 topic list
+      → /lf/lowstate, /utlidar/cloud, /wirelesscontroller ...
+
+  PASO 4 — Ver LiDAR del G1 en RViz2:
+    bash codigos/lidar/launch_g1_lidar.sh enp7s0
+
+  PARA PRUEBAS SIN ROBOT (loopback):
+    source ros2_ws/setup_local.sh
+
+  NOTA: reemplazar enp7s0 con la interfaz de red real (ver: ip link show)
+
+
+════════════════════════════════════════════════════════════════════════════════
+ 11. ARCHIVOS IMPORTANTES
+════════════════════════════════════════════════════════════════════════════════
+
+  ARCHIVO                                        PARA QUE
+  ─────────────────────────────────────────────────────────────────────────
+  simulacion/sim_hv.py                           Sim MuJoCo (HV 48 obs, 12-DOF)
+  simulacion/sim_motion.py                       Sim MuJoCo (motion 47 obs)
+  simulacion/sim_motion_policies.py              Sim MuJoCo (29-DOF movimiento)
+  simulacion/configs/motion_agacharse.yaml       Config agacharse MuJoCo
+  simulacion/configs/motion_munecas.yaml         Config munecas MuJoCo
+  despliegue/deploy_dual.py                      Robot real — locomotion 12-DOF
+  despliegue/deploy_motion.py                    Robot real — movimiento 29-DOF
+  despliegue/configs/motion_agacharse.yaml       Config agacharse real
+  despliegue/configs/motion_munecas.yaml         Config munecas real
+  politicas/motion_agacharse_v10_jit.pt          Politica agacharse (94 obs)
+  politicas/motion_munecas_DR_jit.pt             Politica munecas (62 obs)
+  politicas/model_7000_jit.pt                    Politica locomocion HV (48 obs)
+  politicas/motion.pt                            Politica locomocion original
+  escenas/scene_29dof.xml                        Modelo MuJoCo 29 DoF
+  entrenamiento/export_motion_policy.py          Exportar politica 29-DOF a JIT
+  ros2_ws/install_deps.sh                        Instalar CycloneDDS RMW (sudo)
+  ros2_ws/build_msgs.sh                          Compilar mensajes Unitree
+  ros2_ws/setup_g1.sh                            Env ROS2 para robot fisico
+  ros2_ws/setup_local.sh                         Env ROS2 para pruebas locales
+  ros2_ws/slam/README.md                         Opciones SLAM (kiss-icp, Fast-LIO2)
+  ros2_ws/slam/unitree_lidar_ros2/               Driver ROS2 para LiDAR L1/L2 externo
+  codigos/lidar/launch_g1_lidar.sh               Ver LiDAR G1 en RViz2
+  codigos/lidar/g1_lidar.rviz                    Config RViz2 para /utlidar/cloud
+  codigos/teleoperacion/robot_control/           IK brazos G1 (pinocchio + casadi)
+  codigos/teleoperacion/utils/episode_writer.py  Grabar episodios para imitacion
+  codigos/imitacion/eval_g1.py                   Evaluar politica imitacion en robot
+  codigos/imitacion/data_editor_EN.py            GUI editor de episodios (PyQt5)
+  codigos/imitacion/utils/                       Conversor JSON → LeRobot
+  simulacion/sdk_bridge/run_g1_bridge.py         Sim MuJoCo con interfaz DDS real
+  simulacion/sdk_bridge/README.md                Guia del SDK bridge
+  simulacion/isaac_sim/launch_g1.sh              Lanzar simulacion Isaac Sim (G1 + DEX1)
+  entrenamiento/isaac_rl_lab/launch_g1_train.sh  Entrenar locomocion en Isaac Lab
+  entrenamiento/isaac_rl_lab/launch_g1_play.sh   Reproducir politica Isaac Lab
+  codigos/isaac_sim/inspect_g1_joints.py         Ver joints G1 en Isaac Lab
+  codigos/isaac_sim/README.md                    Guia Isaac Sim / Isaac Lab
+  escenas/unitree_model/                         USD del G1 para Isaac Sim/Lab
+  GUIA_RAPIDA.txt                               Este archivo
+
+================================================================================

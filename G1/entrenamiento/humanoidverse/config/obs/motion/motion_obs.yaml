@@ -1,0 +1,47 @@
+# @package _global_
+
+obs:
+  obs_dict:
+    actor_obs: [
+      dof_pos,
+      q_target,
+      phase_signal,
+      projected_gravity,
+    ]
+
+    critic_obs: [
+      dof_pos,
+      q_target,
+      phase_signal,
+      projected_gravity,
+    ]
+
+  obs_auxiliary:
+    history_long: {
+      dof_pos: 20,
+      q_target: 20,
+    }
+    history_short: {
+      dof_pos: 3,
+      q_target: 3,
+    }
+
+  obs_scales: {
+    dof_pos: 1.0,
+    q_target: 1.0,
+    phase_signal: 1.0,
+    projected_gravity: 1.0,
+  }
+
+  noise_scales: {
+    dof_pos: 0.0,
+    q_target: 0.0,
+    phase_signal: 0.0,
+    projected_gravity: 0.0,
+  }
+
+  obs_dims:
+    - dof_pos: ${robot.dof_obs_size}
+    - q_target: ${robot.dof_obs_size}
+    - phase_signal: 1
+    - projected_gravity: 3

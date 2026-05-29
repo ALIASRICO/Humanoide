@@ -1,0 +1,163 @@
+{
+  "type_description_msg": {
+    "type_description": {
+      "type_name": "unitree_api/msg/Request",
+      "fields": [
+        {
+          "name": "header",
+          "type": {
+            "type_id": 1,
+            "capacity": 0,
+            "string_capacity": 0,
+            "nested_type_name": "unitree_api/msg/RequestHeader"
+          },
+          "default_value": ""
+        },
+        {
+          "name": "parameter",
+          "type": {
+            "type_id": 17,
+            "capacity": 0,
+            "string_capacity": 0,
+            "nested_type_name": ""
+          },
+          "default_value": ""
+        },
+        {
+          "name": "binary",
+          "type": {
+            "type_id": 147,
+            "capacity": 0,
+            "string_capacity": 0,
+            "nested_type_name": ""
+          },
+          "default_value": ""
+        }
+      ]
+    },
+    "referenced_type_descriptions": [
+      {
+        "type_name": "unitree_api/msg/RequestHeader",
+        "fields": [
+          {
+            "name": "identity",
+            "type": {
+              "type_id": 1,
+              "capacity": 0,
+              "string_capacity": 0,
+              "nested_type_name": "unitree_api/msg/RequestIdentity"
+            },
+            "default_value": ""
+          },
+          {
+            "name": "lease",
+            "type": {
+              "type_id": 1,
+              "capacity": 0,
+              "string_capacity": 0,
+              "nested_type_name": "unitree_api/msg/RequestLease"
+            },
+            "default_value": ""
+          },
+          {
+            "name": "policy",
+            "type": {
+              "type_id": 1,
+              "capacity": 0,
+              "string_capacity": 0,
+              "nested_type_name": "unitree_api/msg/RequestPolicy"
+            },
+            "default_value": ""
+          }
+        ]
+      },
+      {
+        "type_name": "unitree_api/msg/RequestIdentity",
+        "fields": [
+          {
+            "name": "id",
+            "type": {
+              "type_id": 8,
+              "capacity": 0,
+              "string_capacity": 0,
+              "nested_type_name": ""
+            },
+            "default_value": ""
+          },
+          {
+            "name": "api_id",
+            "type": {
+              "type_id": 8,
+              "capacity": 0,
+              "string_capacity": 0,
+              "nested_type_name": ""
+            },
+            "default_value": ""
+          }
+        ]
+      },
+      {
+        "type_name": "unitree_api/msg/RequestLease",
+        "fields": [
+          {
+            "name": "id",
+            "type": {
+              "type_id": 8,
+              "capacity": 0,
+              "string_capacity": 0,
+              "nested_type_name": ""
+            },
+            "default_value": ""
+          }
+        ]
+      },
+      {
+        "type_name": "unitree_api/msg/RequestPolicy",
+        "fields": [
+          {
+            "name": "priority",
+            "type": {
+              "type_id": 6,
+              "capacity": 0,
+              "string_capacity": 0,
+              "nested_type_name": ""
+            },
+            "default_value": ""
+          },
+          {
+            "name": "noreply",
+            "type": {
+              "type_id": 15,
+              "capacity": 0,
+              "string_capacity": 0,
+              "nested_type_name": ""
+            },
+            "default_value": ""
+          }
+        ]
+      }
+    ]
+  },
+  "type_hashes": [
+    {
+      "type_name": "unitree_api/msg/Request",
+      "hash_string": "RIHS01_60dda80d19538b06c8f79b77222b1b7642dd753b8439a6bd535ff0cba08c5378"
+    },
+    {
+      "type_name": "unitree_api/msg/RequestHeader",
+      "hash_string": "RIHS01_4273d5fbe6bee52502f55a6a73427e4ae2f12329f175d7c07b95341fd527acff"
+    },
+    {
+      "type_name": "unitree_api/msg/RequestIdentity",
+      "hash_string": "RIHS01_912fcf308a7cd6e27ea3aeea02515f587fa666b76af1963660429995f0e381c6"
+    },
+    {
+      "type_name": "unitree_api/msg/RequestLease",
+      "hash_string": "RIHS01_16b5c2257d5280a095e3e4fe26a48e782e294fa3d68760ce38599260a344bf4e"
+    },
+    {
+      "type_name": "unitree_api/msg/RequestPolicy",
+      "hash_string": "RIHS01_742c3612b991be55430d1847af4afb2f119069f2e16e3a2143c6352a94ef35e4"
+    }
+  ]
+}

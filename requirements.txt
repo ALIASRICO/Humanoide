@@ -1,0 +1,51 @@
+# ============================================================
+# Entorno g1_udc — MuJoCo sim + despliegue + SDK + extras
+# Instalar con: conda activate envs/g1_udc && pip install -r requirements.txt
+# ============================================================
+
+# --- Core ---
+numpy
+scipy
+pyyaml
+
+# --- PyTorch (RTX 5090 / CUDA 13.0) ---
+# pip install torch==2.9.0 torchvision==0.24.0 --index-url https://download.pytorch.org/whl/cu130
+# Para RTX 30xx/40xx (CUDA 12.1): cambiar cu130 → cu121
+
+# --- MuJoCo ---
+mujoco==3.2.3
+mujoco-python-viewer==0.1.4
+glfw==2.9.0
+pygame
+
+# --- SDK Unitree (comunicacion con el robot) ---
+unitree-sdk2py==1.0.1
+cyclonedds==0.10.2
+
+# --- Deteccion de objetos ---
+ultralytics==8.4.41
+
+# --- Cinematica inversa (teleoperacion de brazos) ---
+casadi
+meshcat
+rerun-sdk==0.20.1
+# pinocchio: instalar via conda → conda install -c conda-forge pinocchio
+
+# --- Imitation learning ---
+lerobot
+pyqt5
+
+# ============================================================
+# Entorno hgen — entrenamiento RL
+# Instalar con: conda activate hgen && pip install -r requirements.txt
+# + pip install genesis-world==0.2.1
+# + pip install -e entrenamiento/
+# ============================================================
+
+# ============================================================
+# ROS2 Jazzy — instalar via apt (NO pip)
+# sudo apt install ros-jazzy-rmw-cyclonedds-cpp
+# sudo apt install ros-jazzy-rosidl-generator-dds-idl
+# sudo apt install ros-jazzy-kiss-icp        (SLAM LiDAR built-in)
+# Luego: bash ros2_ws/build_msgs.sh
+# ============================================================

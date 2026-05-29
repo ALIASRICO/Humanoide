@@ -1,0 +1,23 @@
+# Ganancias PD por grupo de joints (puntos de partida)
+# Subir kp = más rigidez (vibración si exagerado)
+# Subir kd = más amortiguación
+hip_pitch_kp: 100.0
+hip_pitch_kd: 4.0
+hip_roll_kp:  100.0
+hip_roll_kd:  4.0
+hip_yaw_kp:    60.0
+hip_yaw_kd:    3.0
+knee_kp:      120.0
+knee_kd:      5.0
+ankle_pitch_kp: 50.0
+ankle_pitch_kd: 2.0
+ankle_roll_kp:  50.0
+ankle_roll_kd:  2.0
+torso_yaw_kp:   80.0
+torso_yaw_kd:   3.0
+shoulder_kp:    60.0
+shoulder_kd:    2.0
+elbow_kp:       40.0
+elbow_kd:       1.5
+wrist_kp:       40.0
+wrist_kd:       1.5

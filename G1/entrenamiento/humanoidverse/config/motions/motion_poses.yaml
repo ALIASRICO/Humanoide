@@ -1,0 +1,77 @@
+# @package _global_
+
+motions:
+  saludar:
+    motion_id: 0
+    motion_name: "saludar"
+    description: "Brazo derecho sube y muñeca oscila"
+    periodic: True
+    period_s: 1.0
+    pose_A:
+      right_shoulder_pitch: -1.2
+      right_shoulder_roll: -0.3
+      right_shoulder_yaw: 0.0
+      right_elbow: 0.8
+      right_wrist_pitch: 0.5
+    pose_B:
+      right_wrist_pitch: -0.5
+    # All other joints at default (0.0 for upper body)
+
+  agacharse:
+    motion_id: 1
+    motion_name: "agacharse"
+    description: "Ciclo completo de pie→squat→pie (V5)"
+    periodic: True
+    period_s: 4.0
+    pose_A:             # de pie (= default_dof_pos)
+      left_hip_pitch: -0.1
+      right_hip_pitch: -0.1
+      left_knee: 0.3
+      right_knee: 0.3
+      left_ankle_pitch: -0.2
+      right_ankle_pitch: -0.2
+    pose_B:             # squat
+      left_hip_pitch: -0.5
+      right_hip_pitch: -0.5
+      left_knee: 0.8
+      right_knee: 0.8
+      left_ankle_pitch: -0.1
+      right_ankle_pitch: -0.1
+    # All upper body joints at default (0.0)
+
+  estirar_brazos:
+    motion_id: 2
+    motion_name: "estirar_brazos"
+    description: "Ambos brazos al frente"
+    periodic: False
+    duration_s: 1.5
+    pose_target:
+      left_shoulder_pitch: -1.4
+      right_shoulder_pitch: -1.4
+      left_shoulder_roll: 0.1
+      right_shoulder_roll: -0.1
+      left_elbow: 0.0
+      right_elbow: 0.0
+    # All other joints at default
+
+  mover_munecas:
+    motion_id: 3
+    motion_name: "mover_munecas"
+    description: "Rotación y flexión de muñecas"
+    periodic: True
+    period_s: 1.2
+    pose_A:
+      left_shoulder_pitch: -0.6
+      right_shoulder_pitch: -0.6
+      left_elbow: 0.5
+      right_elbow: 0.5
+      left_wrist_roll: 1.0
+      right_wrist_roll: -1.0
+      left_wrist_pitch: 0.4
+      right_wrist_pitch: 0.4
+    pose_B:
+      left_wrist_roll: -1.0
+      right_wrist_roll: 1.0
+      left_wrist_pitch: -0.4
+      right_wrist_pitch: -0.4
+    # All other joints at default
